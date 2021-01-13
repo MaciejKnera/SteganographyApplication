@@ -1,0 +1,158 @@
+﻿@model InputForm
+@using SteganographyLogic.Helpers
+@{
+    ViewData["Title"] = "Encode Audio";
+}
+
+<div class="row">
+    <div class="col-5 jumbotron">
+
+        <h3>Encode message</h3>
+        <span>What do you want to encode?</span><br />
+
+        <input type="radio" id=".txt/imageRdBtn" name="inputType" value=".txt/image/wav" />
+        <label for=".txt/imageRdBtn">text file/image/audio</label>
+        <input type="radio" id="messageRdBtn" name="inputType" value="message" />
+        <label for="messageRdBtn">message</label>
+
+        <form method="post" asp-action="EncodePost" enctype="multipart/form-data" id="form">
+            <div class="form-group">
+                <div class="custom-file">
+                    <input type="file" class="custom-file-input" id="audio" accept=".wav" asp-for="CarrierFile" style="cursor:pointer;text-indent:-999px;" />
+                    <label class="custom-file-label" for="audio" id="inputAudioLabel" onclick="displayFileNameAudio()">Choose Audio</label>
+                    <span id="validateAudioInput" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="custom-file">
+                    @{
+                        string acceptedTypes = string.Empty;
+                        foreach (KeyValuePair<string, string> item in StaticData.mimeTypes)
+                        {
+                            acceptedTypes += item.Key + ",";
+                        }
+                    }
+                    <input type="file" class="custom-file-input" id="fileToHide" accept="@acceptedTypes" asp-for="FileToHide" disabled style="cursor:default;text-indent:-999px;" />
+                    <label class="custom-file-label" for="fileToHide" id="inputFileLabel" onclick="displayFileNameFile()">Choose File To Hide</label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="message">Enter text message</label>
+                <textarea class="form-control" id="message" rows="3" asp-for="Message" disabled></textarea>
+                <span id="validateInputToHide" class="text-danger"></span>
+            </div>
+            <div>
+                <button type="submit" class="btn btn-success btn-lg btn-block">Encode</button>
+            </div>
+        </form>
+    </div>
+    <div class="col-5 offset-lg-1" id="resultHolder">
+        <h1 id="errorInfo"></h1>
+    </div>
+</div>
+
+@section Scripts{
+    <script src="https://code.jquery.com/jquery-3.5.1.js"
+            integrity="sha256-QWo7LDvxbWT2tbbQ97B53yJnYU3WhH/C8ycbRAkjPDc="
+            crossorigin="anonymous"></script>
+
+    <script type="text/javascript">
+
+        $('#form').submit(function (event) {
+            event.preventDefault();
+            $('#validateAudioInput').empty();
+            $('#validateInputToHide').empty();
+            $('#errorInfo').empty();
+
+            if (document.getElementById('audio').files.length === 0) {
+                $('#validateAudioInput').html('You must provide an audio.');
+            }
+            if (document.getElementById('fileToHide').files.length === 0 && document.getElementById('message').value == '') {
+                $('#validateInputToHide').html('You must provide either file or message to hide.')
+            }
+            else {
+                var formData = new FormData(this);
+
+                
+
+                var anchor = document.getElementById('downloadButton');
+                if (typeof(anchor) != 'undefined' && anchor != null) {
+                    anchor.remove();
+                }
+                var audio = document.getElementById('audioElement');
+                if (typeof (audio) != 'undefined' && audio != null) {
+                    audio.remove();
+                }
+
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Content("~/Audio/EncodePost")',
+                    data: formData,
+                    cache: false,
+                    contentType: false,
+                    processData: false,
+                    success: function (data) {
+                        var audio = document.createElement('audio');
+                        audio.id = 'audioElement';
+                        audio.controls = true;
+                        audio.setAttribute('controlsList', 'nodownload');
+                        audio.innerHTML += 'Your browser does not support the <code>audio</code> element.';
+
+                        var source = document.createElement('source');
+                        source.src = data.source;
+                        source.type = "audio/wav";
+                        audio.appendChild(source);
+
+                        var anchor = document.createElement('a');
+                        anchor.id = 'downloadButton';
+                        anchor.href = data.source;
+                        anchor.setAttribute('download', 'audio');
+                        anchor.innerHTML = '<img src="@Url.Content("~/images/download.png")"/>';
+
+                        var div = document.getElementById('resultHolder');
+                        div.appendChild(audio);
+                        div.appendChild(anchor);
+                    },
+                    error: function (data) {
+                        if (data.responseJSON.value.error == "fileTooBig") {
+                            $('#errorInfo').html('You need bigger audio file to hide such message.');
+                        } else if (data.responseJSON.value.error == "wrongFormat") {
+                            $('#errorInfo').html('Wrong file format. Please provide valid .wav file.');
+                        } else {
+                            $('#errorInfo').html('Something went wrong, please try again.');
+                        }
+                    }
+                });
+            }
+        });
+
+        document.getElementById(".txt/imageRdBtn").onclick = function () {
+            $("#fileToHide").prop("disabled", false);
+            $('#fileToHide').css('cursor', 'pointer');
+            $("#message").prop("disabled", true);
+        }
+        document.getElementById("messageRdBtn").onclick = function () {
+            $("#message").prop("disabled", false);
+            $("#fileToHide").prop("disabled", true);
+            $('#fileToHide').css('cursor', 'default');
+        }
+
+        $('#audio').change(function () {
+            var fileName = $(this)[0].files[0].name;
+            $('#inputAudioLabel').html(fileName);
+        });
+        function displayFileNameImage() {
+            $('#audio').trigger('change');
+        }
+
+        $('#fileToHide').change(function () {
+            var fileName = $(this)[0].files[0].name;
+            $('#inputFileLabel').html(fileName);
+        });
+        function displayFileName() {
+            $('#fileToHide').trigger('change');
+        }
+
+    </script>
+
+}

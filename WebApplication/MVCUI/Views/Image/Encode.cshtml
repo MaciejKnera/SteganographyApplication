@@ -1,0 +1,142 @@
+﻿@using SteganographyLogic.Helpers
+@model InputForm
+@{
+    ViewData["Title"] = "Encode Image";
+}
+
+<div class="row">
+    <div class="col-5 jumbotron d-inline-block">
+
+        <h3>Encode message</h3>
+        <span>What do you want to encode?</span><br />
+
+        <input type="radio" id=".txt/imageRdBtn" name="inputType" value=".txt/image" />
+        <label class="custom-tooltip" for=".txt/imageRdBtn">text file/image/audio</label>
+        <input type="radio" id="messageRdBtn" name="inputType" value="message" />
+        <label class="custom-tooltip" for="messageRdBtn">message</label>
+
+        <form method="post" asp-action="Encode" enctype="multipart/form-data" id="form">
+            <div class="form-group">
+                <div class="custom-file">
+                    <input type="file" class="custom-file-input" id="image" accept="image/*" asp-for="CarrierFile" style="cursor:pointer;text-indent:-999px;" />
+                    <label class="custom-file-label" for="image" id="inputImageLabel" onclick="displayFileNameImage()">Choose Image</label>
+                    <span id="validateImageInput" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="custom-file">
+                    @{ 
+                        string acceptedTypes = string.Empty;
+                        foreach (KeyValuePair<string, string> item in StaticData.mimeTypes)
+                        {
+                            acceptedTypes += item.Key + ",";
+                        }
+                    }
+                    <input type="file" class="custom-file-input" id="fileToHide" accept="@acceptedTypes audio/*,image/*" asp-for="FileToHide" disabled style="cursor:default;text-indent:-999px;" />
+                    <label class="custom-file-label" for="fileToHide" id="inputFileLabel" onclick="displayFileNameFile()">Choose File To Hide</label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="message">Enter text message</label>
+                <textarea class="form-control" id="message" rows="3" asp-for="Message" disabled></textarea>
+                <span id="validateInputToHide" class="text-danger"></span>
+            </div>
+            <div>
+                <button type="submit" class="btn btn-success btn-lg btn-block">Encode</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="col-5 d-inline-block">
+        <img class="img-fluid mb-4" id="encodedImage" /><br />
+        <div class="col-1 offset-4 d-inline" id="resultHolder"></div>
+        <h1 class="offset-sm-1" id="errorInfo"></h1>
+    </div>
+
+</div>
+
+@section Scripts{
+    <script src="https://code.jquery.com/jquery-3.5.1.js"
+            integrity="sha256-QWo7LDvxbWT2tbbQ97B53yJnYU3WhH/C8ycbRAkjPDc="
+            crossorigin="anonymous"></script>
+
+    <script type="text/javascript">
+
+        $('#form').submit(function (event) {
+            event.preventDefault();
+            $('#validateImageInput').empty();
+            $('#validateInputToHide').empty();
+            $('#errorInfo').empty();
+
+            if (document.getElementById('image').files.length === 0) {
+                $('#validateImageInput').html('You must provide an image.');
+            }
+            if (document.getElementById('fileToHide').files.length === 0 && document.getElementById('message').value == '') {
+                $('#validateInputToHide').html('You must provide either file or message to hide.')
+            }
+            else {
+                var formData = new FormData(this);
+
+                var anchor = document.getElementById('downloadButton');
+                if (typeof(anchor) != 'undefined' && anchor != null) {
+                    anchor.remove();
+                }
+
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Content("~/Image/EncodePost")',
+                    data: formData,
+                    cache: false,
+                    contentType: false,
+                    processData: false,
+                    success: function (data) {
+                        $('#encodedImage').attr('src', data.source);
+                        var anchor = document.createElement('a');
+                        anchor.id = 'downloadButton';
+                        anchor.href = data.source;
+                        anchor.setAttribute('download', data.fileName);
+                        anchor.innerHTML = '<img src="@Url.Content("~/images/download.png")"/>';
+                        var div = document.getElementById('resultHolder');
+                        div.appendChild(anchor);
+                    },
+                    error: function (data) {
+                        if (data.responseJSON.value.invalid == true) {
+                            $('#errorInfo').html('You need bigger image to hide such message.')
+                        } else {
+                            $('#errorInfo').html('Something went wrong, please try again.')
+                        }
+                    }
+                });
+            }
+        });
+
+        document.getElementById(".txt/imageRdBtn").onclick = function () {
+            $("#fileToHide").prop("disabled", false);
+            $('#fileToHide').css('cursor', 'pointer');
+            $("#message").prop("disabled", true);
+        }
+        document.getElementById("messageRdBtn").onclick = function () {
+            $("#message").prop("disabled", false);
+            $("#fileToHide").prop("disabled", true);
+            $('#fileToHide').css('cursor', 'default');
+        }
+
+        $('#image').change(function () {
+            var fileName = $(this)[0].files[0].name;
+            $('#inputImageLabel').html(fileName);
+        });
+        function displayFileNameImage() {
+            $('#image').trigger('change');
+        }
+
+        $('#fileToHide').change(function () {
+            var fileName = $(this)[0].files[0].name;
+            $('#inputFileLabel').html(fileName);
+        });
+        function displayFileName() {
+            $('#fileToHide').trigger('change');
+        }
+
+    </script>
+
+}

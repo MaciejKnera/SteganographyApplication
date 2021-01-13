@@ -1,0 +1,62 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - StegoApp</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" runat="server" type="text/css"/>
+    <link rel="stylesheet" href="~/css/site.css" runat="server" type="text/css"/>
+    <link rel="stylesheet" href="~/css/all.css" runat="server" type="text/css"/>
+</head>
+<body style="background-color:lightgrey;">
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-dark border-bottom box-shadow mb-3">
+            <div class="container">
+                <img class="mx-4" src="~/images/cryptography.png" alt="logo" width="50" height="50"/>
+                <a class="navbar-brand application-title" asp-area="" asp-controller="Home" asp-action="Index">SteganographyApp</a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse d-sm-inline-flex flex-sm-row-reverse">
+                    <ul class="nav navbar-nav flex-grow-1">
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle dropdown-main-item mx-4" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><i class="far fa-image"></i></a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" asp-controller="Image" asp-action="Encode"><i class="fas fa-lock dropdown-item-image"></i> Encode</a></li>
+                                <li><a class="dropdown-item" asp-controller="Image" asp-action="Decode"><i class="fas fa-lock-open dropdown-item-image"></i> Decode</a></li>
+                            </ul>
+                        </li>
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle dropdown-main-item mx-4" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><i class="fab fa-itunes-note"></i></a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" asp-controller="Audio" asp-action="Encode"><i class="fas fa-lock dropdown-item-image"></i> Encode</a></li>
+                                <li><a class="dropdown-item" asp-controller="Audio" asp-action="Decode"><i class="fas fa-lock-open dropdown-item-image"></i> Decode</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item ml-3 mr-4" style="font-size:24px;">
+                            <a class="nav-link application-title align-middle" asp-controller="Home" asp-action="About">About</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="border-top footer text-muted bg-dark fixed-bottom">
+        <div class="container">
+            &copy; @DateTime.UtcNow.Year Steganography Application<br />
+            <span>Icons made by <a href="http://www.freepik.com/" title="Freepik">Freepik</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a></span>
+        </div>
+    </footer>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

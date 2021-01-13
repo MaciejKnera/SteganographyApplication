@@ -1,0 +1,172 @@
+﻿
+@model InputForm
+@{
+    ViewData["Title"] = "Decode Audio";
+}
+
+<div class="row">
+    <div class="col-5 jumbotron">
+        <h3>Decode hidden message</h3>
+        <form method="post" asp-action="Decode" enctype="multipart/form-data" id="form">
+            <div class="form-group">
+                <div class="custom-file">
+                    <input type="file" class="custom-file-input" id="audio" accept="audio/wav" asp-for="CarrierFile" style="cursor:pointer;text-indent:-999px;" />
+                    <label class="custom-file-label" for="audio" id="inputAudioLabel" onclick="displayFileNameAudio()">Choose Audio</label>
+                    <span id="validateAudioInput" class="text-danger"></span>
+                </div>
+            </div>
+            <div>
+                <button type="submit" class="btn btn-success btn-lg btn-block">Decode</button>
+            </div>
+        </form>
+    </div>
+    <div class="col-5 offset-lg-1" id="result">
+
+    </div>
+</div>
+
+
+@section Scripts{
+    <script src="https://code.jquery.com/jquery-3.5.1.js"
+            integrity="sha256-QWo7LDvxbWT2tbbQ97B53yJnYU3WhH/C8ycbRAkjPDc="
+            crossorigin="anonymous"></script>
+
+    <script type="text/javascript">
+
+        $('#form').submit(function (event) {
+            event.preventDefault();
+            $('#validateAudioInput').empty();
+            $('#result').empty();
+
+            if (document.getElementById('audio').files.length === 0) {
+                $('#validateAudioInput').html('You must provide an audio file.');
+            }
+            else {
+                var formData = new FormData(this);
+
+                var anchor = document.getElementById('downloadButton');
+                if (typeof (anchor) != 'undefined' && anchor != null) {
+                    anchor.remove();
+                }
+
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Content("~/Audio/DecodePost")',
+                    data: formData,
+                    cache: false,
+                    contentType: false,
+                    processData: false,
+                    success: function (data) {
+                        if (data.type != 4) {
+                            var header = document.createElement('h1');
+                            header.innerHTML = "Your decoded message:";
+                            document.getElementById('result').appendChild(header);
+                        }
+                        switch (data.type) {
+
+                            case 0:
+                                var txtarea = document.createElement('textarea');
+                                txtarea.readOnly = true;
+                                txtarea.value += data.message;
+                                txtarea.style.width = '100%';
+                                document.getElementById('result').appendChild(txtarea);
+                                break;
+                            case 1:
+                                var binaryData = base64ToArrayBuffer(data.message);
+                                var blob = new Blob([binaryData], { type: data.mimeType });  
+
+                                var anchor = document.createElement('a');
+                                anchor.id = 'downloadButton';
+                                anchor.href = window.URL.createObjectURL(blob);
+                                anchor.setAttribute('download', data.fileName);
+                                anchor.innerHTML = `<img src="@Url.Content("~/images/textfile.png")"/><br/>  &nbsp; &nbsp; ${data.fileName}`;
+                                anchor.style.textDecoration = 'none';
+                                anchor.style.fontWeight = 'bold';
+                                anchor.style.textAlign = 'center';
+
+                                document.getElementById('result').appendChild(anchor);
+                                break;
+                            case 2:
+                                var image = document.createElement('img');
+                                image.setAttribute('src', data.message);
+                                image.style.display = 'block';
+                                image.style.marginBottom = '20px';
+
+                                var anchor = document.createElement('a');
+                                anchor.id = 'downloadButton';
+                                anchor.href = data.message;
+                                anchor.setAttribute('download', data.fileName);
+                                anchor.innerHTML = '<img src="@Url.Content("~/images/download.png")"/>';
+
+                                var div = document.getElementById('result');
+                                div.appendChild(anchor);
+                                div.insertBefore(image, anchor);
+                                break;
+                            case 3:
+                                var audio = document.createElement('audio');
+                                audio.controls = true;
+                                audio.setAttribute('controlsList', 'nodownload');
+                                audio.innerHTML += 'Your browser does not support the <code>audio</code> element.';
+                                audio.style.marginRight = '20px';
+
+                                var source = document.createElement('source');
+                                source.src = data.message;
+                                source.type = data.mimeType;
+                                audio.appendChild(source);
+
+                                var anchor = document.createElement('a');
+                                anchor.id = 'downloadButton';
+                                anchor.href = data.message;
+                                anchor.setAttribute('download', data.fileName);
+                                anchor.innerHTML = '<img src="@Url.Content("~/images/download.png")"/>';
+
+                                var div = document.getElementById('result');
+                                div.appendChild(audio);
+                                div.appendChild(anchor);
+                                break;
+                            default:
+                                var prghp = document.createElement('h1');
+                                prghp.innerHTML = "Could not read hidden message. It's type may be unknown.";
+                                prghp.style.fontWeight = 'bold';
+
+                                document.getElementById('result').appendChild(prghp);
+                        }
+                    },
+                    error: function (data) {
+                        var prgph = document.createElement('h1');
+
+                        if (data.responseJSON.value.error == "wrongFormat") {
+                            prgph.innerHTML = 'Wrong file format. Please provide valid .wav file.';
+                        } else if (data.responseJSON.value.error == "message not found") {
+                            prgph.innerHTML = 'No hidden message was found.';
+                        } else {
+                            prgph.innerHTML = 'Something went wrong, please try again.';
+                        }
+
+                        document.getElementById('result').appendChild(prgph);
+                    }
+                });
+            }
+        });
+
+        $('#audio').change(function () {
+            var fileName = $(this)[0].files[0].name;
+            $('#inputAudioLabel').html(fileName);
+        });
+        function displayFileNameImage() {
+            $('#audio').trigger('change');
+        }
+
+        function base64ToArrayBuffer(base64) {
+            var binaryString = window.atob(base64);
+            var len = binaryString.length;
+            var bytes = new Uint8Array(len);
+            for (var i = 0; i < len; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+
+            return bytes;
+        }
+
+    </script>
+}

@@ -1,0 +1,24 @@
+﻿
+@{
+    ViewData["Title"] = "About";
+}
+
+<h1>Welcome in steganography app!</h1>
+<div style="font-size:18px;">
+    <p class="lead">What's it all about?</p>
+    <span>Steganography is a technique of hiding data inside other data. It's not a cryptography though, because you don't encode messages. 
+    It's more about hiding the very fact that you are sending a secret message to someone. This applications lets you hide different type of data
+    inside images and audio files. Everything is simple, you just need to choose carrier file, file or text message to hide and that's it!
+    Then you can send file to a friend and he just need to decode hidden message on this site.</span><br /><br />
+    <p class="lead">How it works?</p>
+    <span>
+        There are many methods to achieve stegonagrophy but this application uses the most simple one. It's called <abbr title="Least Significant Bit">LSB</abbr>
+        and the whole point focuses on modyfing least significant bits of the carrier file. For example we can use image to hide in a text message. Image is
+        a 2-dimensional matrix of pixels. Each pixel is represented as 3 bytes which stand for R,G,B values. Then, every byte consists of 8 bits which 
+        define byte value and therefore color of the pixel. Changing only one bit at the last position has no significant influence on the total value of the byte.
+        Thus, we cannot see any difference in the manipulated image. Since we can freely change every last bit in every byte of each pixel, there is no obstacle
+        to convert our message to string of bits and replace last bits of our carrier file with those from the message. To get message back, you only need to read
+        last bits of given file and convert them into text message again.
+    </span>
+</div>
+
